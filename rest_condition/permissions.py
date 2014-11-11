@@ -89,7 +89,14 @@ class Condition(object):
             else:
                 if _is_permission_factory(condition):
                     condition = condition()
-                result = getattr(condition, permission_name)(*args, **kwargs)
+                # This alteration from the standard rest condition is to do
+                # has_permission if has_object_permission is called, since
+                # DRF does it this way already
+                if permission_name == 'has_object_permission':
+                    result = (getattr(condition, 'has_permission')(*args[:-1]) and
+                              getattr(condition, permission_name)(*args, **kwargs))
+                else:
+                    result = getattr(condition, permission_name)(*args, **kwargs)
 
             if reduced_result is _NONE:
                 reduced_result = result
